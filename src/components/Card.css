@@ -1,0 +1,51 @@
+.card {
+  display: inline-block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, z-index 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.card img {
+  width: 110px;
+  height: 154px;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+  display: block;
+  background: white;
+}
+
+.card.rotate-right {
+  transform: rotate(90deg);
+  transform-origin: center;
+}
+
+.card.rotate-left {
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.card.clickable {
+  cursor: pointer;
+}
+
+.card.clickable:hover {
+  transform: translateY(-20px);
+  z-index: 1000;
+}
+
+.card.clickable.rotate-right:hover {
+  transform: rotate(90deg) translateX(-20px);
+}
+
+.card.clickable.rotate-left:hover {
+  transform: rotate(-90deg) translateX(20px);
+}
+
+.card.clickable:hover img {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.card.hidden-card img {
+  width: 110px;
+  height: 154px;
+}

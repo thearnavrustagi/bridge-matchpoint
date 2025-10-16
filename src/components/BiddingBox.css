@@ -1,0 +1,126 @@
+.bidding-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.85);
+  background: rgba(27, 94, 32, 0.95);
+  border: 3px solid #fff;
+  border-radius: 20px;
+  padding: 25px;
+  min-width: 450px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.bidding-header {
+  margin-bottom: 20px;
+}
+
+.deal-info {
+  display: flex;
+  justify-content: space-around;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.bidding-table {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.bidding-headers {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 8px;
+}
+
+.bidding-history {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  color: white;
+  text-align: center;
+}
+
+.bid-entry {
+  padding: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.bidding-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.number-row,
+.suit-row,
+.action-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.bid-btn {
+  flex: 1;
+  padding: 15px 20px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  border: 3px solid #fff;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.bid-btn:hover {
+  background: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.bid-btn:active {
+  transform: scale(0.98);
+}
+
+.suit-btn {
+  font-size: 2rem;
+}
+
+.suit-clubs {
+  color: #2e7d32;
+}
+
+.suit-diamonds {
+  color: #d32f2f;
+}
+
+.suit-hearts {
+  color: #d32f2f;
+}
+
+.suit-spades {
+  color: #1a237e;
+}
+
+.action-btn {
+  font-size: 1.2rem;
+}
+
+.hcp-display {
+  text-align: center;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 15px;
+}
