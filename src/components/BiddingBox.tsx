@@ -88,8 +88,6 @@ function BiddingBox({ onBid, onPass, onDouble, biddingHistory, currentPlayer }: 
           </button>
         </div>
       </div>
-
-      <div className="hcp-display">6 HCP</div>
     </div>
   );
 }
