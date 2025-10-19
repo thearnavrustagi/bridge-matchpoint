@@ -634,15 +634,67 @@ async def websocket_endpoint(websocket: WebSocket):
                                 "current_player": lead_player
                             }))
                     else:
-                        # All passed out - restart bidding
-                        game.bidding_history = []
-                        game.current_player = 1  # North starts again
+                        # All passed out - end game with 0 scores
+                        vulnerability = get_vulnerability(game.game_number)
+                        
+                        # Create zero score data
+                        zero_score_data = {
+                            'declarer_partnership': 0,  # Arbitrary since no contract
+                            'declarer_score': {
+                                'contract_points': 0,
+                                'overtrick_points': 0,
+                                'slam_bonus': 0,
+                                'double_bonus': 0,
+                                'game_bonus': 0,
+                                'undertrick_penalty': 0,
+                                'total': 0
+                            },
+                            'defender_score': {
+                                'contract_points': 0,
+                                'overtrick_points': 0,
+                                'slam_bonus': 0,
+                                'double_bonus': 0,
+                                'game_bonus': 0,
+                                'undertrick_penalty': 0,
+                                'total': 0
+                            },
+                            'contract_made': False,
+                            'tricks_taken': 0,
+                            'tricks_needed': 0
+                        }
+                        
+                        # Save game record with all passes
+                        game_record = {
+                            "game_number": game.game_number,
+                            "timestamp": time.time(),
+                            "vulnerability": vulnerability,
+                            "bidding_history": game.bidding_history.copy(),
+                            "contract": None,  # No contract was made
+                            "play_history": [],  # No cards were played
+                            "tricks_won": [0, 0, 0, 0],
+                            "score": zero_score_data,
+                            "declarer": None,
+                            "dummy": None,
+                            "passed_out": True
+                        }
+                        game.game_history.append(game_record)
+                        
+                        print(f"Game {game.game_number} passed out (all players passed)")
+                        
+                        # Broadcast game over with zero scores
                         for player_ws in game.players:
                             await player_ws.send_text(json.dumps({
-                                "type": "all_passed",
-                                "message": "All players passed. Starting new bidding round.",
-                                "current_player": 1
+                                "type": "game_over",
+                                "tricks": [0, 0, 0, 0],
+                                "contract": None,
+                                "score": zero_score_data,
+                                "game_number": game.game_number,
+                                "vulnerability": vulnerability,
+                                "passed_out": True
                             }))
+                        
+                        # Increment game number for next game
+                        game.game_number += 1
                 else:
                     # Move to next player
                     game.current_player = (game.current_player + 1) % 4
