@@ -26,8 +26,7 @@ function LandingScreen({ onMakeLobby, onJoinLobby, gameCode }: LandingScreenProp
     <div className="landing-screen">
       <ShaderBackground />
       <div className="title-section">
-        <h1 className="main-title">Bridge</h1>
-        <p className="subtitle">Matchpoint</p>
+        <img src="/assets/bid-breaker.png" alt="Bid Breaker" className="main-logo" />
       </div>
       
       <div className="lobby-controls">
