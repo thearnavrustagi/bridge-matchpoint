@@ -1,17 +1,129 @@
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes bounce {
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.12);
+  }
+  40% {
+    transform: scale(1.08);
+  }
+  60% {
+    transform: scale(1.105);
+  }
+  80% {
+    transform: scale(1.095);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes bounceArched {
+  0% {
+    transform: rotate(var(--arch-rotation)) scale(1);
+  }
+  20% {
+    transform: rotate(var(--arch-rotation)) scale(1.12);
+  }
+  40% {
+    transform: rotate(var(--arch-rotation)) scale(1.08);
+  }
+  60% {
+    transform: rotate(var(--arch-rotation)) scale(1.105);
+  }
+  80% {
+    transform: rotate(var(--arch-rotation)) scale(1.095);
+  }
+  100% {
+    transform: rotate(var(--arch-rotation)) scale(1.1);
+  }
+}
+
+@keyframes bounceRotateRight {
+  0% {
+    transform: rotate(90deg) scale(1);
+  }
+  20% {
+    transform: rotate(90deg) scale(1.12);
+  }
+  40% {
+    transform: rotate(90deg) scale(1.08);
+  }
+  60% {
+    transform: rotate(90deg) scale(1.105);
+  }
+  80% {
+    transform: rotate(90deg) scale(1.095);
+  }
+  100% {
+    transform: rotate(90deg) scale(1.1);
+  }
+}
+
+@keyframes bounceRotateLeft {
+  0% {
+    transform: rotate(-90deg) scale(1);
+  }
+  20% {
+    transform: rotate(-90deg) scale(1.12);
+  }
+  40% {
+    transform: rotate(-90deg) scale(1.08);
+  }
+  60% {
+    transform: rotate(-90deg) scale(1.105);
+  }
+  80% {
+    transform: rotate(-90deg) scale(1.095);
+  }
+  100% {
+    transform: rotate(-90deg) scale(1.1);
+  }
+}
+
+@keyframes disabledPulse {
+  0%, 100% {
+    opacity: 0.85;
+    filter: blur(0.5px);
+  }
+  50% {
+    opacity: 0.7;
+    filter: blur(0.5px);
+  }
+}
+
 .card {
   display: inline-block;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, z-index 0.2s ease;
+  transition: transform 0.15s ease, z-index 0.15s ease, opacity 0.5s ease;
   position: relative;
   z-index: 1;
 }
 
+.card:not(.hidden-card) {
+  cursor: pointer;
+  transition: transform 0.25s ease;
+}
+
 .card img {
-  width: 110px;
-  height: 154px;
+  width: 9rem;
+  height: 12rem;
   border-radius: 8px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
   display: block;
+  animation: float 5s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
+  /*
   background: white;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);*/
 }
 
 .card.rotate-right {
@@ -24,28 +136,49 @@
   transform-origin: center;
 }
 
+.card.arched {
+  transform: rotate(var(--arch-rotation));
+  transform-origin: center bottom 400px;
+}
+
+.card.arched-inverted {
+  transform: rotate(var(--arch-rotation));
+  transform-origin: center top 180px;
+}
+
+/* Hover effects for visible (non-hidden) cards */
+.card:not(.hidden-card):hover {
+  transform: scale(1.1);
+}
+
+.card:not(.hidden-card).arched:hover {
+  transform: rotate(var(--arch-rotation)) scale(1.1);
+}
+
+.card:not(.hidden-card).rotate-right:hover {
+  transform: rotate(90deg) scale(1.1);
+}
+
+.card:not(.hidden-card).rotate-left:hover {
+  transform: rotate(-90deg) scale(1.1);
+}
+
+/* Keep clickable cursor for clickable cards */
 .card.clickable {
   cursor: pointer;
 }
 
-.card.clickable:hover {
-  transform: translateY(-20px);
-  z-index: 1000;
-}
-
-.card.clickable.rotate-right:hover {
-  transform: rotate(90deg) translateX(-20px);
-}
-
-.card.clickable.rotate-left:hover {
-  transform: rotate(-90deg) translateX(20px);
-}
-
-.card.clickable:hover img {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-}
-
 .card.hidden-card img {
-  width: 110px;
-  height: 154px;
+  width: 200px;
+  height: 280px;
+}
+
+/* Disabled state for unplayable cards */
+.card.disabled {
+  cursor: not-allowed;
+  animation: disabledPulse 2s ease-in-out infinite;
+}
+
+.card.disabled:hover {
+  transform: none !important;
 }

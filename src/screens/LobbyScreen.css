@@ -1,0 +1,174 @@
+.lobby-screen-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.lobby-info-card {
+  background-color: #3a3a3a;
+  padding: 60px 80px;
+  border-radius: 20px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  min-width: 500px;
+  z-index: 2;
+}
+
+.you-are-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  font-weight: normal;
+}
+
+.player-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 5rem;
+  margin: 0;
+  line-height: 1;
+  margin-bottom: 30px;
+  font-style: italic;
+}
+
+.players-count {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.3rem;
+  margin-bottom: 30px;
+  color: #aaa;
+}
+
+.position-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.position-btn {
+  padding: 12px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 2px solid #555;
+  border-radius: 8px;
+  background-color: transparent;
+  color: #aaa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.position-btn:hover {
+  border-color: #3D9875;
+  color: white;
+}
+
+.position-btn.selected {
+  background-color: #3D9875;
+  border-color: #3D9875;
+  color: white;
+}
+
+.lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.start-game-button {
+  padding: 20px 50px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.3rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: #3D9875;
+  color: white;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.start-game-button:hover:not(:disabled) {
+  background-color: #358063;
+  transform: translateY(-2px);
+}
+
+.start-game-button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+.copy-code-button {
+  padding: 16px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border: 2px solid #F68E00;
+  border-radius: 10px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.copy-code-button:hover {
+  background-color: #F68E00;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.copy-code-button:hover svg {
+  stroke: white;
+}
+
+.copy-code-button .code-text {
+  flex: 1;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.copy-code-button svg {
+  display: block;
+  stroke: #F68E00;
+  transition: stroke 0.2s ease;
+}
+
+.toast-notification {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background-color: #3D9875;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+  z-index: 1000;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+

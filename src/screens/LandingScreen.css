@@ -1,0 +1,211 @@
+.landing-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.title-section {
+  text-align: center;
+  margin-bottom: 50px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.main-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 10rem;
+  color: white;
+  margin: 0;
+  line-height: 1;
+}
+
+.subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 2.5rem;
+  color: white;
+  margin-top: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.lobby-controls {
+  position: absolute;
+  bottom: 50px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  background-color: #343434;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.make-lobby-button,
+.join-button {
+  padding: 15px 30px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.make-lobby-button {
+  background-color: #3D9875;
+  color: white;
+}
+
+.make-lobby-button:hover {
+  background-color: #358063;
+  transform: translateY(-2px);
+}
+
+.join-button {
+  background-color: #F68E00;
+  color: white;
+}
+
+.join-button:hover {
+  background-color: #e08000;
+  transform: translateY(-2px);
+}
+
+.lobby-code-input {
+  padding: 15px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+  width: 250px;
+  background-color: white;
+  color: #333;
+}
+
+.lobby-code-input::placeholder {
+  color: #999;
+}
+
+.game-code-display {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: bold;
+  z-index: 2;
+}
+
+.settings-button {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  padding: 12px;
+  font-size: 1.8rem;
+  border: none;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  z-index: 2;
+}
+
+.settings-button:hover {
+  background-color: transparent;
+  transform: rotate(30deg);
+}
+
+.settings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001;
+}
+
+.settings-modal {
+  background-color: #222;
+  padding: 30px 40px;
+  border-radius: 15px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  max-width: 400px;
+  width: 90%;
+}
+
+.settings-modal h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.settings-modal p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+
+.settings-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.settings-option-button {
+  padding: 15px 25px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #3D9875;
+  color: white;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.settings-option-button:hover {
+  background-color: #358063;
+  transform: translateY(-2px);
+}
+
+.close-settings-button {
+  padding: 10px 25px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #666;
+  color: white;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.close-settings-button:hover {
+  background-color: #555;
+  transform: translateY(-2px);
+}
+

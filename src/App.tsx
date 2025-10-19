@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './App.css';
-import Card from './components/Card';
-import BiddingBox from './components/BiddingBox';
-import { createDeck, shuffleDeck, dealHands, sortHand, type CardType, type PlayerPosition } from './utils/game';
+import { sortHand, type CardType, type PlayerPosition } from './utils/game';
+import { useWebSocket } from './WebSocketProvider';
+import LandingScreen from './screens/LandingScreen';
+import LobbyScreen from './screens/LobbyScreen';
+import GameScreen from './screens/GameScreen';
 
-type GamePhase = 'start' | 'bidding' | 'playing';
+type GamePhase = 'landing' | 'lobby' | 'bidding' | 'playing';
 
 interface BidType {
   player: string;
@@ -15,156 +18,365 @@ interface BidType {
 }
 
 function App() {
+  const location = useLocation();
+  
+  // Game state
   const [hands, setHands] = useState<CardType[][]>([[], [], [], []]);
-  const [currentPlayer, setCurrentPlayer] = useState<PlayerPosition>(0); // West starts bidding
+  const [currentPlayer, setCurrentPlayer] = useState<PlayerPosition>(0);
   const [playedCards, setPlayedCards] = useState<{ card: CardType; player: PlayerPosition }[]>([]);
+  const [allPlayedCards, setAllPlayedCards] = useState<{ card: CardType; player: PlayerPosition }[]>([]); // Track all cards played in the game
   const [tricks, setTricks] = useState([0, 0, 0, 0]);
-  const [gamePhase, setGamePhase] = useState<GamePhase>('start');
+  const [gamePhase, setGamePhase] = useState<GamePhase>('landing');
   const [biddingHistory, setBiddingHistory] = useState<BidType[]>([]);
   const [contract, setContract] = useState<{ level: number; suit: string; declarer: number; doubled: boolean; redoubled: boolean } | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<number>(0);
-  const [selectedSuit, setSelectedSuit] = useState<string>('');
-  const [dealer, setDealer] = useState<PlayerPosition>(0);
-  const [leadPlayer, setLeadPlayer] = useState<PlayerPosition | null>(null);
-  const [trumpSuit, setTrumpSuit] = useState<string | null>(null);
+  const [dummyHand, setDummyHand] = useState<CardType[] | null>(null);
+  const [dummyPlayer, setDummyPlayer] = useState<PlayerPosition | null>(null);
+  const [scoreData, setScoreData] = useState<any | null>(null);
+  const [gameNumber, setGameNumber] = useState<number>(1);
+  const [vulnerability, setVulnerability] = useState<{ns: boolean, ew: boolean}>({ns: false, ew: false});
+  const [cumulativeScores, setCumulativeScores] = useState<{we: number, they: number}>({we: 0, they: 0});
+  
+  // Multiplayer state
+  const [selectedPosition, setSelectedPosition] = useState<PlayerPosition | null>(null);
+  const [gameCode, setGameCode] = useState<string | null>(null);
+  const [gameState, setGameState] = useState<any | null>(null);
+  const [isHost, setIsHost] = useState<boolean>(false);
+  const [hasAttemptedReconnect, setHasAttemptedReconnect] = useState(false);
 
-  const startNewGame = () => {
-    const deck = createDeck();
-    const shuffled = shuffleDeck(deck);
-    const dealt = dealHands(shuffled);
-    setHands(dealt.map(hand => sortHand(hand)));
-    setBiddingHistory([]);
-    setContract(null);
-    setTricks([0, 0, 0, 0]);
-    setPlayedCards([]);
-    setCurrentPlayer(dealer);
-    setGamePhase('bidding');
-  };
+  const { ws, sendMessage, messages } = useWebSocket();
+  const [processedMessageCount, setProcessedMessageCount] = useState(0);
 
-  // Helper function to check if bidding should end
-  const checkBiddingEnd = (history: BidType[]): boolean => {
-    if (history.length < 4) return false;
-
-    // Check if all 4 players passed (passed out)
-    if (history.length === 4 && history.every(b => b.suit === 'Pass')) {
-      return true;
-    }
-
-    // Check for 3 consecutive passes after a real bid
-    const last3 = history.slice(-3);
-    const hasRealBid = history.some(b => b.level > 0);
-    return hasRealBid && last3.every(b => b.suit === 'Pass');
-  };
-
-  // Helper function to get final contract
-  const getFinalContract = (history: BidType[]) => {
-    const lastRealBid = [...history].reverse().find(b => b.level > 0);
-    if (!lastRealBid) return null;
-
-    // Find declarer (first player of partnership to bid this suit)
-    const partnership = lastRealBid.playerIndex % 2;
-    const declarer = history.find(b =>
-      b.level > 0 &&
-      b.suit === lastRealBid.suit &&
-      b.playerIndex % 2 === partnership
-    );
-
-    // Check for double/redouble
-    const lastBidIndex = history.lastIndexOf(lastRealBid);
-    const afterBid = history.slice(lastBidIndex + 1);
-    const doubled = afterBid.some(b => b.suit === 'Double');
-    const redoubled = afterBid.some(b => b.suit === 'Redouble');
-
-    return {
-      level: lastRealBid.level,
-      suit: lastRealBid.suit,
-      declarer: declarer?.playerIndex || lastRealBid.playerIndex,
-      doubled,
-      redoubled
-    };
-  };
-
-  const playCard = (card: CardType, player: PlayerPosition) => {
-    if (player !== currentPlayer || gamePhase !== 'playing') return;
-
-    // Check if player must follow suit
-    if (playedCards.length > 0) {
-      const leadSuit = playedCards[0].card.suit;
-      const hasLeadSuit = hands[player].some(c => c.suit === leadSuit);
-
-      if (hasLeadSuit && card.suit !== leadSuit) {
-        // Player has cards of lead suit but trying to play different suit - not allowed
-        return;
-      }
-    }
-
-    const newHands = [...hands];
-    newHands[player] = newHands[player].filter(c => !(c.suit === card.suit && c.rank === card.rank));
-    setHands(newHands);
-
-    const newPlayed = [...playedCards, { card, player }];
-    setPlayedCards(newPlayed);
-
-    if (newPlayed.length === 4) {
-      // Determine winner with proper Bridge rules (trump suits)
-      const leadSuit = newPlayed[0].card.suit;
-      let winner = newPlayed[0];
-
-      for (const played of newPlayed) {
-        // Trump beats everything
-        if (trumpSuit && played.card.suit === trumpSuit) {
-          if (winner.card.suit !== trumpSuit || played.card.rank > winner.card.rank) {
-            winner = played;
-          }
-        }
-        // If no trump played, highest of lead suit wins
-        else if (played.card.suit === leadSuit && winner.card.suit !== trumpSuit) {
-          if (winner.card.suit !== leadSuit || played.card.rank > winner.card.rank) {
-            winner = played;
-          }
-        }
-      }
-
-      const newTricks = [...tricks];
-      newTricks[winner.player]++;
-      setTricks(newTricks);
-
-      setTimeout(() => {
-        setPlayedCards([]);
-        setCurrentPlayer(winner.player);
-      }, 1500);
-    } else {
-      setCurrentPlayer(((player + 1) % 4) as PlayerPosition);
-    }
-  };
-
-  const handleBid = (level: number, suit: string) => {
-    const playerNames = ['West', 'North', 'East', 'South'];
-
-    // Handle level selection
-    if (suit === 'level') {
-      setSelectedLevel(level);
+  // Handle URL-based joining and auto-reconnection on mount
+  useEffect(() => {
+    // Wait for WebSocket to be ready
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      console.log('WebSocket not ready yet, waiting...');
       return;
     }
 
-    // Handle suit selection - need both level and suit
-    if (suit === 'NT' || suit === 'clubs' || suit === 'diamonds' || suit === 'hearts' || suit === 'spades') {
-      if (selectedLevel === 0) {
-        return;
+    const path = location.pathname;
+    
+    // Extract game code from URL
+    const joinMatch = path.match(/^\/join\/([a-zA-Z0-9]+)$/);
+    const playMatch = path.match(/^\/play\/([a-zA-Z0-9]+)$/);
+    
+    const urlGameCode = joinMatch?.[1] || playMatch?.[1];
+    
+    if (urlGameCode && !hasAttemptedReconnect) {
+      setHasAttemptedReconnect(true);
+      
+      // Try to restore previous session
+      const savedGameCode = localStorage.getItem('bridge_game_code');
+      const savedPosition = localStorage.getItem('bridge_selected_position');
+      
+      if (savedGameCode === urlGameCode && savedPosition !== null) {
+        // Reconnect to existing game with saved position
+        const position = parseInt(savedPosition) as PlayerPosition;
+        console.log(`Reconnecting to game ${urlGameCode} as position ${position}`);
+        
+        setGameCode(urlGameCode);
+        setSelectedPosition(position);
+        
+        // Join the game
+        sendMessage(`join:${urlGameCode}`);
+        
+        // Re-announce position after a short delay
+        const positionNames = ['west', 'north', 'east', 'south'];
+        setTimeout(() => {
+          sendMessage(`iam:${positionNames[position]}`);
+        }, 500);
+        
+        setGamePhase('lobby');
+      } else {
+        // New join - just join the game
+        console.log(`Joining new game ${urlGameCode}`);
+        setGameCode(urlGameCode);
+        sendMessage(`join:${urlGameCode}`);
+        setGamePhase('lobby');
       }
+    }
+  }, [location.pathname, hasAttemptedReconnect, sendMessage, ws]);
+  
+  // Save game state to localStorage for reconnection
+  useEffect(() => {
+    if (gameCode) {
+      localStorage.setItem('bridge_game_code', gameCode);
+    }
+    if (selectedPosition !== null) {
+      localStorage.setItem('bridge_selected_position', selectedPosition.toString());
+    }
+  }, [gameCode, selectedPosition]);
 
-      // Check if bid is valid (must be higher than previous bid)
+  // WebSocket message handler
+  useEffect(() => {
+    const newMessages = messages.slice(processedMessageCount);
+    
+    newMessages.forEach((message) => {
+      console.log("App received WebSocket message:", message);
+      
+      try {
+        const parsedMessage = JSON.parse(message);
+        
+        switch (parsedMessage.type) {
+          case "game_code":
+            setGameCode(parsedMessage.code);
+            console.log("Game Code:", parsedMessage.code);
+            break;
+            
+          case "game_state":
+            setGameState(parsedMessage);
+            if (parsedMessage.game_id) {
+              setGameCode(parsedMessage.game_id);
+            }
+            if (parsedMessage.is_host !== undefined) {
+              setIsHost(parsedMessage.is_host);
+            }
+            console.log("Game state updated:", parsedMessage);
+            break;
+            
+          case "hand":
+            console.log("Received hand:", parsedMessage.hand);
+            console.log("Selected position:", selectedPosition);
+            
+            // Convert card numbers to CardType objects
+            // 1-13: Spades, 14-26: Hearts, 27-39: Diamonds, 40-52: Clubs
+            const cardHand = parsedMessage.hand.map((cardNum: number) => {
+              const suitIndex = Math.floor((cardNum - 1) / 13);
+              const rankIndex = (cardNum - 1) % 13;
+              const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+              return {
+                suit: suits[suitIndex],
+                rank: rankIndex
+              };
+            });
+            console.log("Converted cards:", cardHand);
+            
+            if (selectedPosition !== null) {
+              setHands((prevHands) => {
+                const newHands = [...prevHands];
+                newHands[selectedPosition] = sortHand(cardHand);
+                console.log("Updated hands, position", selectedPosition, "now has", newHands[selectedPosition].length, "cards");
+                return newHands;
+              });
+            } else {
+              console.warn("Cannot set hand: selectedPosition is null");
+            }
+            break;
+            
+          case "game_started":
+            console.log(parsedMessage.message);
+            setGamePhase('bidding');
+            // Reset game state for new game
+            // Preserve our own hand but clear other players' hands
+            setHands((prevHands) => {
+              const newHands: CardType[][] = [[], [], [], []];
+              // Keep our own hand if we have one
+              if (selectedPosition !== null && prevHands[selectedPosition]) {
+                newHands[selectedPosition] = prevHands[selectedPosition];
+              }
+              return newHands;
+            });
+            setAllPlayedCards([]);
+            setPlayedCards([]);
+            setBiddingHistory([]);
+            setContract(null);
+            setDummyHand(null);
+            setDummyPlayer(null);
+            setScoreData(null);
+            setTricks([0, 0, 0, 0]);
+            // Bidding starts with North (position 1)
+            setCurrentPlayer(parsedMessage.current_player || 1);
+            if (parsedMessage.game_number) {
+              setGameNumber(parsedMessage.game_number);
+            }
+            if (parsedMessage.vulnerability) {
+              setVulnerability(parsedMessage.vulnerability);
+            }
+            break;
+          
+          case "bid":
+            console.log("Received bid:", parsedMessage.bid);
+            setBiddingHistory(prev => [...prev, parsedMessage.bid]);
+            break;
+          
+          case "next_player":
+            console.log("Next player:", parsedMessage.current_player);
+            setCurrentPlayer(parsedMessage.current_player);
+            break;
+          
+          case "bidding_ended":
+            console.log("Bidding ended, contract:", parsedMessage.contract);
+            const contract = parsedMessage.contract;
+            setContract(contract);
+            setGamePhase('playing');
+            setCurrentPlayer(parsedMessage.current_player);
+            break;
+          
+          case "all_passed":
+            console.log("All passed, restarting bidding");
+            setBiddingHistory([]);
+            setCurrentPlayer(parsedMessage.current_player);
+            break;
+          
+          case "card_played":
+            console.log("Card played:", parsedMessage.card, "by player", parsedMessage.player);
+            const playedCard = { 
+              card: parsedMessage.card, 
+              player: parsedMessage.player 
+            };
+            setPlayedCards(prev => [...prev, playedCard]);
+            setAllPlayedCards(prev => [...prev, playedCard]);
+            break;
+          
+          case "trick_complete":
+            console.log("Trick complete, winner:", parsedMessage.winner);
+            setTricks(parsedMessage.tricks);
+            // Clear played cards after a delay to show the trick
+            setTimeout(() => {
+              setPlayedCards([]);
+              setCurrentPlayer(parsedMessage.winner);
+            }, 1500);
+            break;
+          
+          case "dummy_revealed":
+            const dummyPlayerName = ['West','North','East','South'][parsedMessage.dummy_player];
+            console.log(`Dummy revealed: Player ${parsedMessage.dummy_player} (${dummyPlayerName}) with ${parsedMessage.dummy_hand.length} cards`);
+            console.log(`Selected position: ${selectedPosition} (${selectedPosition !== null ? ['West','North','East','South'][selectedPosition] : 'None'})`);
+            setDummyPlayer(parsedMessage.dummy_player);
+            
+            // Convert card numbers to CardType objects
+            const dummyCardHand = parsedMessage.dummy_hand.map((cardNum: number) => {
+              const suitIndex = Math.floor((cardNum - 1) / 13);
+              const rankIndex = (cardNum - 1) % 13;
+              const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+              return {
+                suit: suits[suitIndex],
+                rank: rankIndex
+              };
+            });
+            setDummyHand(sortHand(dummyCardHand));
+            
+            // Also update the hands array for the dummy position
+            setHands((prevHands) => {
+              const newHands = [...prevHands];
+              newHands[parsedMessage.dummy_player] = sortHand(dummyCardHand);
+              return newHands;
+            });
+            break;
+          
+          case "dummy_hand_updated":
+            console.log("Dummy hand updated:", parsedMessage.dummy_hand);
+            
+            // Convert card numbers to CardType objects
+            const updatedDummyHand = parsedMessage.dummy_hand.map((cardNum: number) => {
+              const suitIndex = Math.floor((cardNum - 1) / 13);
+              const rankIndex = (cardNum - 1) % 13;
+              const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+              return {
+                suit: suits[suitIndex],
+                rank: rankIndex
+              };
+            });
+            setDummyHand(sortHand(updatedDummyHand));
+            
+            // Also update the hands array for the dummy position
+            setHands((prevHands) => {
+              const newHands = [...prevHands];
+              newHands[parsedMessage.dummy_player] = sortHand(updatedDummyHand);
+              return newHands;
+            });
+            break;
+          
+          case "game_over":
+            console.log("Game over!", parsedMessage.tricks, parsedMessage.score);
+            setScoreData(parsedMessage.score);
+            
+            // Update cumulative scores
+            if (parsedMessage.score && selectedPosition !== null) {
+              const myPartnership = selectedPosition % 2; // 0 for E-W, 1 for N-S
+              const declarerPartnership = parsedMessage.score.declarer_partnership;
+              
+              const weRoundScore = myPartnership === declarerPartnership 
+                ? parsedMessage.score.declarer_score.total 
+                : parsedMessage.score.defender_score.total;
+              const theyRoundScore = myPartnership === declarerPartnership 
+                ? parsedMessage.score.defender_score.total 
+                : parsedMessage.score.declarer_score.total;
+              
+              setCumulativeScores(prev => ({
+                we: prev.we + weRoundScore,
+                they: prev.they + theyRoundScore
+              }));
+            }
+            
+            if (parsedMessage.game_number) {
+              setGameNumber(parsedMessage.game_number);
+            }
+            if (parsedMessage.vulnerability) {
+              setVulnerability(parsedMessage.vulnerability);
+            }
+            break;
+            
+          case "error":
+            console.error("Server Error:", parsedMessage.message);
+            alert(parsedMessage.message);
+            break;
+            
+          default:
+            console.log("Unknown message type:", parsedMessage);
+        }
+      } catch (e) {
+        console.log("Non-JSON message:", message);
+      }
+    });
+    
+    if (newMessages.length > 0) {
+      setProcessedMessageCount(messages.length);
+    }
+  }, [messages, processedMessageCount, selectedPosition]);
+
+  // Handlers
+  const handleMakeLobby = () => {
+    sendMessage("create:");
+    setGamePhase('lobby');
+  };
+
+  const handleJoinLobby = (code: string) => {
+    sendMessage(`join:${code}`);
+    setGamePhase('lobby');
+  };
+
+  const handlePositionSelect = (position: PlayerPosition) => {
+    setSelectedPosition(position);
+    const positionNames = ['west', 'north', 'east', 'south'];
+    sendMessage(`iam:${positionNames[position]}`);
+  };
+
+  const handleStartGame = () => {
+    sendMessage("start:");
+  };
+
+  const handleNextGame = () => {
+    if (!isHost) return;
+    sendMessage("start:");
+  };
+
+  const handleBid = (level: number, suit: string) => {
+    if (selectedPosition === null) return;
+    
+    const playerNames = ['West', 'North', 'East', 'South'];
+
+    if (suit === 'NT' || suit === 'clubs' || suit === 'diamonds' || suit === 'hearts' || suit === 'spades') {
+      // Validate bid is higher than last real bid
       const suitRank = { 'clubs': 1, 'diamonds': 2, 'hearts': 3, 'spades': 4, 'NT': 5 };
       const lastRealBid = [...biddingHistory].reverse().find(b => b.level > 0);
 
       if (lastRealBid) {
-        const isHigherLevel = selectedLevel > lastRealBid.level;
-        const isSameLevelHigherSuit = selectedLevel === lastRealBid.level &&
+        const isHigherLevel = level > lastRealBid.level;
+        const isSameLevelHigherSuit = level === lastRealBid.level &&
           suitRank[suit as keyof typeof suitRank] > suitRank[lastRealBid.suit as keyof typeof suitRank];
 
         if (!isHigherLevel && !isSameLevelHigherSuit) {
-          // Bid too low
-          setSelectedLevel(0);
           return;
         }
       }
@@ -177,210 +389,134 @@ function App() {
         'NT': 'NT'
       };
 
-      const bidString = `${selectedLevel}${suitSymbols[suit] || suit}`;
-      const newBid: BidType = {
-        player: playerNames[currentPlayer],
-        playerIndex: currentPlayer,
-        level: selectedLevel,
-        suit: suit as any,
-        display: bidString
-      };
-
-      const newHistory = [...biddingHistory, newBid];
-      setBiddingHistory(newHistory);
-
-      setSelectedLevel(0);
-      setSelectedSuit('');
-
-      // Check if bidding ends (3 consecutive passes after a bid)
-      if (checkBiddingEnd(newHistory)) {
-        const finalContract = getFinalContract(newHistory);
-        if (finalContract) {
-          setContract(finalContract);
-          setTrumpSuit(finalContract.suit === 'NT' ? null : finalContract.suit);
-          setGamePhase('playing');
-          // Lead player is to the left of declarer
-          const leadPlayerIndex = ((finalContract.declarer + 1) % 4) as PlayerPosition;
-          setLeadPlayer(leadPlayerIndex);
-          setCurrentPlayer(leadPlayerIndex);
-        }
-      } else {
-        setCurrentPlayer(((currentPlayer + 1) % 4) as PlayerPosition);
-      }
+      const bidString = `${level}${suitSymbols[suit] || suit}`;
+      
+      // Send bid to server with selectedPosition (the actual player making the bid)
+      sendMessage(`bid:${level}:${suit}:${playerNames[selectedPosition]}:${selectedPosition}:${bidString}`);
     }
   };
 
   const handlePass = () => {
+    if (selectedPosition === null) return;
+    
     const playerNames = ['West', 'North', 'East', 'South'];
-    const newBid: BidType = {
-      player: playerNames[currentPlayer],
-      playerIndex: currentPlayer,
-      level: 0,
-      suit: 'Pass',
-      display: 'Pass'
-    };
-
-    const newHistory = [...biddingHistory, newBid];
-    setBiddingHistory(newHistory);
-
-    setSelectedLevel(0);
-    setSelectedSuit('');
-
-    if (checkBiddingEnd(newHistory)) {
-      const finalContract = getFinalContract(newHistory);
-      if (finalContract) {
-        setContract(finalContract);
-        setTrumpSuit(finalContract.suit === 'NT' ? null : finalContract.suit);
-        setGamePhase('playing');
-        const leadPlayerIndex = ((finalContract.declarer + 1) % 4) as PlayerPosition;
-        setLeadPlayer(leadPlayerIndex);
-        setCurrentPlayer(leadPlayerIndex);
-      } else {
-        // All passed out - redeal
-        const deck = createDeck();
-        const shuffled = shuffleDeck(deck);
-        const dealt = dealHands(shuffled);
-        setHands(dealt.map(hand => sortHand(hand)));
-        setBiddingHistory([]);
-        setCurrentPlayer(dealer);
-      }
-    } else {
-      setCurrentPlayer(((currentPlayer + 1) % 4) as PlayerPosition);
-    }
+    
+    // Send pass to server with selectedPosition (the actual player passing)
+    sendMessage(`bid:0:Pass:${playerNames[selectedPosition]}:${selectedPosition}:Pass`);
   };
 
   const handleDouble = () => {
+    if (selectedPosition === null) return;
+    
     const playerNames = ['West', 'North', 'East', 'South'];
+    const lastRealBid = [...biddingHistory].reverse().find(b => b.level && b.level > 0);
+    if (!lastRealBid) return;
 
-    // Can only double opponent's bid
-    const lastRealBid = [...biddingHistory].reverse().find(b => b.level > 0);
-    if (!lastRealBid || lastRealBid.playerIndex % 2 === currentPlayer % 2) {
-      return; // Can't double partner's bid
-    }
-
-    // Check if already doubled
     const lastBidIndex = biddingHistory.lastIndexOf(lastRealBid);
     const afterBid = biddingHistory.slice(lastBidIndex + 1);
-    if (afterBid.some(b => b.suit === 'Double')) {
-      return; // Already doubled
+    const hasDouble = afterBid.some(b => b.suit === 'Double');
+    const hasRedouble = afterBid.some(b => b.suit === 'Redouble');
+
+    // Can't do anything if already redoubled
+    if (hasRedouble) return;
+
+    // Check if we're teammates with the bidder
+    const areTeammates = lastRealBid.playerIndex % 2 === selectedPosition % 2;
+
+    if (hasDouble) {
+      // There's already a double - can only redouble if we're teammates with the original bidder
+      if (!areTeammates) return;
+      sendMessage(`bid:0:Redouble:${playerNames[selectedPosition]}:${selectedPosition}:XX`);
+    } else {
+      // No double yet - can only double if we're opponents with the bidder
+      if (areTeammates) return;
+      sendMessage(`bid:0:Double:${playerNames[selectedPosition]}:${selectedPosition}:X`);
     }
-
-    const newBid: BidType = {
-      player: playerNames[currentPlayer],
-      playerIndex: currentPlayer,
-      level: 0,
-      suit: 'Double',
-      display: 'Double'
-    };
-
-    setBiddingHistory([...biddingHistory, newBid]);
-    setSelectedLevel(0);
-    setSelectedSuit('');
-    setCurrentPlayer(((currentPlayer + 1) % 4) as PlayerPosition);
   };
 
-  const playerDisplayNames = ['WEST', 'NORTH', 'EAST', 'SOUTH'];
-  const nsTeam = tricks[1] + tricks[3]; // North + South
-  const ewTeam = tricks[2] + tricks[0]; // East + West
+  const handlePlayCard = (card: CardType, player: PlayerPosition) => {
+    if (player !== currentPlayer || gamePhase !== 'playing') return;
+    
+    // Check if it's dummy's turn and if declarer is trying to play
+    const isDummyTurn = contract && player === (contract.declarer + 2) % 4;
+    const canPlay = isDummyTurn ? selectedPosition === contract.declarer : selectedPosition === player;
+    
+    if (!canPlay) return;
 
-  return (
-    <div className="game">
-      {gamePhase === 'start' && (
-        <div className="start-screen">
-          <div className="start-content">
-            <h1 className="game-title">Contract Bridge</h1>
-            <p className="game-subtitle">A Classic Card Game</p>
-            <button className="start-button" onClick={startNewGame}>
-              Start New Game
-            </button>
-            <div className="game-rules">
-              <h3>Quick Rules</h3>
-              <ul>
-                <li>4 players in 2 partnerships (North-South vs East-West)</li>
-                <li>Bidding phase: bid level + suit to set contract</li>
-                <li>Playing phase: win tricks to fulfill contract</li>
-                <li>Must follow suit if possible</li>
-                <li>Trump suit beats all other suits</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
+    // Check if player must follow suit
+    if (playedCards.length > 0) {
+      const leadSuit = playedCards[0].card.suit;
+      const hasLeadSuit = hands[player].some(c => c.suit === leadSuit);
+      if (hasLeadSuit && card.suit !== leadSuit) return;
+    }
 
-      {gamePhase === 'bidding' && (
-        <BiddingBox
+    // Send play to server
+    sendMessage(`play:${card.suit}:${card.rank}:${player}`);
+    
+    // Remove card from hand locally (will be synced by server response)
+    const newHands = [...hands];
+    newHands[player] = newHands[player].filter(c => !(c.suit === card.suit && c.rank === card.rank));
+    setHands(newHands);
+  };
+
+  // Render appropriate screen based on game phase
+  const renderScreen = () => {
+    if (gamePhase === 'landing') {
+      return (
+        <LandingScreen
+          onMakeLobby={handleMakeLobby}
+          onJoinLobby={handleJoinLobby}
+          gameCode={gameCode}
+        />
+      );
+    }
+
+    if (gamePhase === 'lobby') {
+      return (
+        <LobbyScreen
+          gameState={gameState}
+          gameCode={gameCode}
+          selectedPosition={selectedPosition}
+          onPositionSelect={handlePositionSelect}
+          onStartGame={handleStartGame}
+        />
+      );
+    }
+
+    if (gamePhase === 'bidding' || gamePhase === 'playing') {
+      return (
+        <GameScreen
+          hands={hands}
+          selectedPosition={selectedPosition}
+          gamePhase={gamePhase}
+          currentPlayer={currentPlayer}
+          biddingHistory={biddingHistory}
+          contract={contract}
+          playedCards={playedCards}
+          allPlayedCards={allPlayedCards}
+          tricks={tricks}
+          dummyPlayer={dummyPlayer}
+          dummyHand={dummyHand}
+          scoreData={scoreData}
+          gameNumber={gameNumber}
+          vulnerability={vulnerability}
+          cumulativeScores={cumulativeScores}
+          isHost={isHost}
           onBid={handleBid}
           onPass={handlePass}
           onDouble={handleDouble}
-          biddingHistory={biddingHistory}
-          currentPlayer={currentPlayer}
+          onPlayCard={handlePlayCard}
+          onNextGame={handleNextGame}
         />
-      )}
+      );
+    }
 
-      {/* North - position 1 - bottom left */}
-      <div className="player north">
-        <div className="hand">
-          {hands[1]?.map((card, i) => (
-            <Card key={i} card={card} onClick={() => playCard(card, 1)} clickable={gamePhase === 'playing' && currentPlayer === 1} hidden />
-          ))}
-        </div>
-      </div>
+    return null;
+  };
 
-      {/* West - position 0 */}
-      <div className="player west">
-        <div className="hand-vertical">
-          {hands[0]?.map((card, i) => (
-            <Card key={i} card={card} onClick={() => playCard(card, 0)} clickable={gamePhase === 'playing' && currentPlayer === 0} hidden rotation="right" />
-          ))}
-        </div>
-      </div>
-
-      {/* East - position 2 */}
-      <div className="player east">
-        <div className="hand-vertical">
-          {hands[2]?.map((card, i) => (
-            <Card key={i} card={card} onClick={() => playCard(card, 2)} clickable={gamePhase === 'playing' && currentPlayer === 2} hidden rotation="left" />
-          ))}
-        </div>
-      </div>
-
-      {/* Center played cards and contract info */}
-      {gamePhase === 'playing' && (
-        <div className="center-area">
-          <div className="contract-info">
-            <div className="declarer">
-              {contract ? `${contract.level}${contract.suit === 'NT' ? 'NT' : contract.suit.charAt(0).toUpperCase()} ${playerDisplayNames[contract.declarer]}` : playerDisplayNames[currentPlayer]}
-            </div>
-          </div>
-
-          <div className="played-cards-area">
-            {playedCards.map((played, i) => (
-              <div key={i} className={`played-card pos-${played.player}`}>
-                <Card card={played.card} />
-              </div>
-            ))}
-          </div>
-
-          <div className="tricks-display">
-            <div className="tricks-box">
-              <div className="tricks-label">Tricks</div>
-              <div className="tricks-score">
-                <div className="team">We <span>{nsTeam}</span></div>
-                <div className="team">They <span>{ewTeam}</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* South - position 3 - bottom right */}
-      <div className="player south">
-        <div className="hand">
-          {hands[3]?.map((card, i) => (
-            <Card key={i} card={card} onClick={() => playCard(card, 3)} clickable={gamePhase === 'playing' && currentPlayer === 3} />
-          ))}
-        </div>
-      </div>
+  return (
+    <div className="game-container">
+      {renderScreen()}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 export type Suit = 'spades' | 'hearts' | 'diamonds' | 'clubs';
-export type PlayerPosition = 0 | 1 | 2 | 3; // North, East, South, West
+export type PlayerPosition = 0 | 1 | 2 | 3; // West, North, East, South
 
 export interface CardType {
   suit: Suit;
@@ -39,8 +39,8 @@ export function sortHand(hand: CardType[]): CardType[] {
   const suitOrder: Record<Suit, number> = {
     spades: 0,
     hearts: 1,
-    diamonds: 2,
-    clubs: 3,
+    clubs: 2,
+    diamonds: 3,
   };
 
   return [...hand].sort((a, b) => {
