@@ -39,7 +39,7 @@ function Card({ card, onClick, clickable = false, hidden = false, rotation = 'no
 
   const handleClick = () => {
     if (clickable && !disabled && onClick) {
-      playSound('cardPlay');
+      // Sound is now played globally when card_played message is received
       onClick();
     }
   };

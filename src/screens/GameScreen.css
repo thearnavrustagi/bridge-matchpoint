@@ -158,6 +158,12 @@
   height: 8.4rem !important;
 }
 
+/* Larger cards when left player is dummy */
+.west.dummy-visible .hand-vertical-left .card img {
+  width: 7rem !important;
+  height: 9.5rem !important;
+}
+
 /* Right side cards (East) - rotated 270 degrees */
 .hand-vertical-right {
   display: flex;
@@ -179,6 +185,27 @@
   width: 6rem !important;
   height: 8.4rem !important;
 }
+
+/* Larger cards when right player is dummy */
+.east.dummy-visible .hand-vertical-right .card img {
+  width: 7rem !important;
+  height: 9.5rem !important;
+}
+
+/* Reverse z-index for dummy on the right (east) */
+.east.dummy-visible .hand-vertical-right .card:nth-child(1) { z-index: 13; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(2) { z-index: 12; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(3) { z-index: 11; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(4) { z-index: 10; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(5) { z-index: 9; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(6) { z-index: 8; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(7) { z-index: 7; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(8) { z-index: 6; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(9) { z-index: 5; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(10) { z-index: 4; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(11) { z-index: 3; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(12) { z-index: 2; }
+.east.dummy-visible .hand-vertical-right .card:nth-child(13) { z-index: 1; }
 
 /* North - top center */
 .north {
@@ -378,13 +405,13 @@
 }
 
 .turn-arrow.west-arrow {
-  left: 8rem;
+  left: 10rem;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .turn-arrow.east-arrow {
-  right: 8rem;
+  right: 10rem;
   top: 50%;
   transform: translateY(-50%);
 }

@@ -55,6 +55,7 @@ interface GameScreenProps {
   vulnerability: {ns: boolean, ew: boolean};
   cumulativeScores: {we: number, they: number};
   isHost?: boolean;
+  passedOut?: boolean;
   onBid: (level: number, suit: string) => void;
   onPass: () => void;
   onDouble: () => void;
@@ -79,6 +80,7 @@ function GameScreen({
   vulnerability,
   cumulativeScores,
   isHost = false,
+  passedOut = false,
   onBid,
   onPass,
   onDouble,
@@ -296,6 +298,7 @@ function GameScreen({
           cumulativeWeScore={cumulativeScores.we}
           cumulativeTheyScore={cumulativeScores.they}
           isHost={isHost}
+          passedOut={passedOut}
           onNextGame={onNextGame}
         />
       )}
@@ -398,7 +401,7 @@ function GameScreen({
       </div>
 
       {/* Left position - West */}
-      <div className="player west">
+      <div className={`player west ${dummy === leftPos && isDummyVisible ? 'dummy-visible' : ''}`}>
         <div className="player-label player-label-left">
           {playerDisplayNames[leftPos]}
           {dummy === leftPos && isDummyVisible && <span className="dummy-label"> (DUMMY)</span>}
@@ -421,7 +424,7 @@ function GameScreen({
       </div>
 
       {/* Right position - East */}
-      <div className="player east">
+      <div className={`player east ${dummy === rightPos && isDummyVisible ? 'dummy-visible' : ''}`}>
         <div className="player-label player-label-right">
           {playerDisplayNames[rightPos]}
           {dummy === rightPos && isDummyVisible && <span className="dummy-label"> (DUMMY)</span>}
@@ -435,7 +438,7 @@ function GameScreen({
               onClick={() => onPlayCard(card, rightPos as PlayerPosition)} 
               clickable={gamePhase === 'playing' && currentPlayer === rightPos && canCurrentPlayerPlay(rightPos as PlayerPosition)} 
               hidden={selectedPosition !== rightPos && !(dummy === rightPos && isDummyVisible)}
-              rotation="left"
+              rotation="right"
               floatDelay={getFloatDelay(i)}
               disabled={!isCardPlayable(card, rightPos)}
             />
@@ -444,7 +447,7 @@ function GameScreen({
       </div>
 
       {/* Bottom position - always the player */}
-      <div className="player south">
+      <div className={`player south ${dummy === bottomPos && isDummyVisible ? 'dummy-visible' : ''}`}>
         {gamePhase === 'bidding' && selectedPosition !== null && (
           <div className="hcp-counter">
             {calculateHCP(hands[bottomPos])} HCP

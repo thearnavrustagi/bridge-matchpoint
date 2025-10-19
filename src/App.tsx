@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import './App.css';
 import { sortHand, type CardType, type PlayerPosition } from './utils/game';
 import { useWebSocket } from './WebSocketProvider';
+import { playSound } from './utils/sound';
 import LandingScreen from './screens/LandingScreen';
 import LobbyScreen from './screens/LobbyScreen';
 import GameScreen from './screens/GameScreen';
@@ -35,6 +36,7 @@ function App() {
   const [gameNumber, setGameNumber] = useState<number>(1);
   const [vulnerability, setVulnerability] = useState<{ns: boolean, ew: boolean}>({ns: false, ew: false});
   const [cumulativeScores, setCumulativeScores] = useState<{we: number, they: number}>({we: 0, they: 0});
+  const [passedOut, setPassedOut] = useState<boolean>(false);
   
   // Multiplayer state
   const [selectedPosition, setSelectedPosition] = useState<PlayerPosition | null>(null);
@@ -183,6 +185,7 @@ function App() {
             setDummyHand(null);
             setDummyPlayer(null);
             setScoreData(null);
+            setPassedOut(false);
             setTricks([0, 0, 0, 0]);
             // Bidding starts with North (position 1)
             setCurrentPlayer(parsedMessage.current_player || 1);
@@ -212,12 +215,6 @@ function App() {
             setCurrentPlayer(parsedMessage.current_player);
             break;
           
-          case "all_passed":
-            console.log("All passed, restarting bidding");
-            setBiddingHistory([]);
-            setCurrentPlayer(parsedMessage.current_player);
-            break;
-          
           case "card_played":
             console.log("Card played:", parsedMessage.card, "by player", parsedMessage.player);
             const playedCard = { 
@@ -226,6 +223,7 @@ function App() {
             };
             setPlayedCards(prev => [...prev, playedCard]);
             setAllPlayedCards(prev => [...prev, playedCard]);
+            playSound('cardPlay');
             break;
           
           case "trick_complete":
@@ -290,6 +288,7 @@ function App() {
           case "game_over":
             console.log("Game over!", parsedMessage.tricks, parsedMessage.score);
             setScoreData(parsedMessage.score);
+            setPassedOut(parsedMessage.passed_out || false);
             
             // Update cumulative scores
             if (parsedMessage.score && selectedPosition !== null) {
@@ -502,6 +501,7 @@ function App() {
           vulnerability={vulnerability}
           cumulativeScores={cumulativeScores}
           isHost={isHost}
+          passedOut={passedOut}
           onBid={handleBid}
           onPass={handlePass}
           onDouble={handleDouble}

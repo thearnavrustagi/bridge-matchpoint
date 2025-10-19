@@ -151,9 +151,42 @@ function BiddingBox({ onBid, onPass, onDouble, biddingHistory, currentPlayer, se
   const organizeBiddingHistory = () => {
     const rounds: BidType[][] = [];
     
-    // Group bids by rounds
-    for (let i = 0; i < biddingHistory.length; i += 4) {
-      const round = biddingHistory.slice(i, i + 4);
+    if (biddingHistory.length === 0) {
+      return rounds;
+    }
+    
+    // Determine the starting player (first bid's playerIndex)
+    // Header order is: North(1), East(2), South(3), West(0)
+    const headerPlayerOrder = [1, 2, 3, 0]; // North, East, South, West
+    const firstBidPlayerIndex = biddingHistory[0].playerIndex;
+    
+    // If we can't determine the starting player, fall back to old behavior
+    if (firstBidPlayerIndex === undefined) {
+      for (let i = 0; i < biddingHistory.length; i += 4) {
+        const round = biddingHistory.slice(i, i + 4);
+        while (round.length < 4) {
+          round.push({ player: '', display: '' } as BidType);
+        }
+        rounds.push(round);
+      }
+      return rounds;
+    }
+    
+    // Find position in header where first bid should appear
+    const startPosition = headerPlayerOrder.indexOf(firstBidPlayerIndex);
+    
+    // Create first round with empty bids before the starting player
+    const firstRound: BidType[] = [];
+    for (let i = 0; i < startPosition; i++) {
+      firstRound.push({ player: '', display: '' } as BidType);
+    }
+    
+    // Add all bids
+    const allBids = [...firstRound, ...biddingHistory];
+    
+    // Group into rounds of 4
+    for (let i = 0; i < allBids.length; i += 4) {
+      const round = allBids.slice(i, i + 4);
       // Pad incomplete round
       while (round.length < 4) {
         round.push({ player: '', display: '' } as BidType);
@@ -247,7 +280,7 @@ function BiddingBox({ onBid, onPass, onDouble, biddingHistory, currentPlayer, se
               </button>
             ))}
             <button 
-              className="bid-btn" 
+              className="bid-btn suit-btn" 
               onClick={() => handleBid('NT')} 
               disabled={!isMyTurn || selectedLevel === null || !isSuitValid('NT')}
             >

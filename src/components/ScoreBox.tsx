@@ -23,6 +23,7 @@ interface ScoreBoxProps {
   cumulativeTheyScore: number;
   isHost: boolean;
   onNextGame: () => void;
+  passedOut?: boolean;
 }
 
 function ScoreBox({
@@ -36,7 +37,8 @@ function ScoreBox({
   cumulativeWeScore,
   cumulativeTheyScore,
   isHost,
-  onNextGame
+  onNextGame,
+  passedOut = false
 }: ScoreBoxProps) {
   // Get vulnerability display
   const getVulnerabilityDisplay = () => {
@@ -59,7 +61,9 @@ function ScoreBox({
           <span>Vul: {getVulnerabilityDisplay()}</span>
         </div>
         <div className="score-result-text">
-          {contractMade ? (
+          {passedOut ? (
+            <span className="contract-passed-out">All Players Passed - No Contract</span>
+          ) : contractMade ? (
             <span className="contract-made">Contract Made! {tricksTaken}/{tricksNeeded} tricks</span>
           ) : (
             <span className="contract-failed">Contract Failed! {tricksTaken}/{tricksNeeded} tricks</span>
