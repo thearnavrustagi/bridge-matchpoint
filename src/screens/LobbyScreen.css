@@ -139,6 +139,7 @@
   letter-spacing: 2px;
 }
 
+<<<<<<< HEAD
 .selectable-text {
   user-select: text;
   -webkit-user-select: text;
@@ -147,6 +148,8 @@
   cursor: text;
 }
 
+=======
+>>>>>>> 6e5539de17860ac303226843732fe4dd02136eed
 .copy-code-button svg {
   display: block;
   stroke: #F68E00;
