@@ -1,0 +1,435 @@
+.game-screen {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* Game Info Display */
+.game-info {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  padding: 15px 25px;
+  border-radius: 12px;
+  border: 2px solid rgba(251, 191, 36, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.game-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fbbf24;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.vulnerability {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.player {
+  position: absolute;
+  z-index: 2;
+}
+
+.player-label {
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.player-label-bottom {
+  margin-top: 15px;
+  margin-bottom: 0;
+  font-size: 1.2rem;
+  color: #FFD700;
+}
+
+.player-label-top {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  color: #FFF;
+}
+
+.player-label-left,
+.player-label-right {
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  color: #FFF;
+  writing-mode: horizontal-tb;
+}
+
+.player-bid {
+  color: #90EE90;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+.hand {
+  display: flex;
+  align-items: flex-end;
+}
+
+.hand .card {
+  margin-left: -100px;
+}
+
+.hand .card:first-child {
+  margin-left: 0;
+}
+
+.hand .card:nth-child(1) { z-index: 1; }
+.hand .card:nth-child(2) { z-index: 2; }
+.hand .card:nth-child(3) { z-index: 3; }
+.hand .card:nth-child(4) { z-index: 4; }
+.hand .card:nth-child(5) { z-index: 5; }
+.hand .card:nth-child(6) { z-index: 6; }
+.hand .card:nth-child(7) { z-index: 7; }
+.hand .card:nth-child(8) { z-index: 8; }
+.hand .card:nth-child(9) { z-index: 9; }
+.hand .card:nth-child(10) { z-index: 10; }
+.hand .card:nth-child(11) { z-index: 11; }
+.hand .card:nth-child(12) { z-index: 12; }
+.hand .card:nth-child(13) { z-index: 13; }
+
+.hand-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hand-vertical .card {
+  margin-top: -100px;
+  margin-left:0;
+}
+
+.hand-vertical .card:first-child {
+  margin-top: 0;
+  margin-left:0;
+}
+
+.hand-vertical .card:nth-child(1) { z-index: 1; }
+.hand-vertical .card:nth-child(2) { z-index: 2; }
+.hand-vertical .card:nth-child(3) { z-index: 3; }
+.hand-vertical .card:nth-child(4) { z-index: 4; }
+.hand-vertical .card:nth-child(5) { z-index: 5; }
+.hand-vertical .card:nth-child(6) { z-index: 6; }
+.hand-vertical .card:nth-child(7) { z-index: 7; }
+.hand-vertical .card:nth-child(8) { z-index: 8; }
+.hand-vertical .card:nth-child(9) { z-index: 9; }
+.hand-vertical .card:nth-child(10) { z-index: 10; }
+.hand-vertical .card:nth-child(11) { z-index: 11; }
+.hand-vertical .card:nth-child(12) { z-index: 12; }
+.hand-vertical .card:nth-child(13) { z-index: 13; }
+
+/* Left side cards (West) - rotated 90 degrees */
+.hand-vertical-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hand-vertical-left .card {
+  margin-top: -6rem;
+  margin-left:-8rem;
+}
+
+.hand-vertical-left .card:first-child {
+  margin-left: -8rem;
+}
+
+.hand-vertical-left .card img {
+  width: 6rem !important;
+  height: 8.4rem !important;
+}
+
+/* Right side cards (East) - rotated 270 degrees */
+.hand-vertical-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hand-vertical-right .card {
+  margin-top: -6rem;
+  margin-right:-8rem;
+}
+
+.hand-vertical-right .card:first-child {
+  margin-top: 0;
+  margin-right: -8rem
+}
+
+.hand-vertical-right .card img {
+  width: 6rem !important;
+  height: 8.4rem !important;
+}
+
+/* North - top center */
+.north {
+  top: -2rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.north .hand.reverse {
+  transform: rotate(180deg);
+}
+
+.north .hand .card {
+  margin-left: -60px;
+}
+
+.north .hand .card:first-child {
+  margin-left: 0;
+}
+
+.north .hand .card img {
+  width: 6rem !important;
+  height: 8.4rem !important;
+}
+
+/* Make north cards bigger when they're the dummy */
+.north.dummy-visible .hand .card img {
+  width: 8rem !important;
+  height: 11.2rem !important;
+}
+
+.north.dummy-visible .hand .card {
+  margin-left: -80px;
+}
+
+.north.dummy-visible .hand .card:first-child {
+  margin-left: 0;
+}
+
+/* South - bottom center */
+.south {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: -12.5vh;
+}
+
+/* HCP Counter */
+.hcp-counter {
+  position: absolute;
+  top: -3.5rem;
+  right: -5rem;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5rem);
+  padding: 10px 20px;
+  border-radius: 8px;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 15;
+  transition: all 0.3s ease;
+}
+
+/* West - left middle */
+.west {
+  left: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* East - right middle */
+.east {
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Center area */
+.center-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.contract-info {
+  position: absolute;
+  top: 0;
+  right: -8rem;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(5rem);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.played-cards-area {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.played-card {
+  position: absolute;
+  z-index: 1;
+}
+
+/* Cross formation positioning with slight overlaps */
+/* West - position 0 - left */
+.played-card.pos-left {
+  left: 50%;
+  top: 50%;
+  transform: translate(-12rem, -50%);
+}
+
+/* North - position 1 - top */
+.played-card.pos-top {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -12rem);
+}
+
+/* East - position 2 - right */
+.played-card.pos-right {
+  right: 50%;
+  top: 50%;
+  transform: translate(12rem, -50%);
+}
+
+/* South - position 3 - bottom */
+.played-card.pos-bottom {
+  bottom: 50%;
+  left: 50%;
+  transform: translate(-50%, 12rem);
+}
+
+/* Z-index layering - latest cards appear on top */
+.played-card:nth-last-child(1) { z-index: 100; } /* Latest card on top */
+.played-card:nth-last-child(2) { z-index: 80; }
+.played-card:nth-last-child(3) { z-index: 60; }
+.played-card:nth-last-child(4) { z-index: 40; }
+.played-card:nth-last-child(5) { z-index: 20; }
+
+/* Disable animations for center played cards */
+.played-card .card img {
+  animation: none !important;
+}
+
+/* Turn indicator arrows */
+.turn-arrow {
+  position: absolute;
+  width: 2.5rem;
+  height: 2.5rem;
+  z-index: 10;
+  animation: pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.turn-arrow img {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.8)) 
+          brightness(0) saturate(100%) 
+          invert(77%) sepia(96%) saturate(500%) hue-rotate(2deg) brightness(104%) contrast(104%);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+/* Arrow positioning for each player */
+.turn-arrow.north-arrow {
+  top: 12rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.turn-arrow.south-arrow {
+  bottom:12rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.turn-arrow.west-arrow {
+  left: 8rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.turn-arrow.east-arrow {
+  right: 8rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Tricks display */
+.tricks-display {
+  position: absolute;
+  left: -8rem;
+  bottom: 0;
+}
+
+.tricks-box {
+  background: rgba(0, 0, 0, 0.3);
+  
+  border-radius: 12px;
+  padding: 16px 20px;
+  backdrop-filter: blur(5rem);
+  min-width: 120px;
+}
+
+.tricks-label {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+  text-align: center;
+  color: white;
+}
+
+.tricks-score {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  color: white;
+}
+
+.team span {
+  font-weight: bold;
+  color: white;
+  font-size: 1.2rem;
+}
+
